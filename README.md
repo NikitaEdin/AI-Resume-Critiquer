@@ -1,7 +1,8 @@
 # AI-Resume-Critiquer
-
 AI-Resume-Critiquer leverages large language models from OpenAI and Anthropic (Claude) to provide intelligent, instant feedback on resumes.<br> 
 Utilising Streamlits for its rapid development and intuitive UI.
+
+![](/example.gif)
 
 ## Features
 - Instant resume analysis and detailed feedback.
