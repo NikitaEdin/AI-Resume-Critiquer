@@ -1,0 +1,5 @@
+python-dotenv
+streamlit
+openai
+PyPDF2
+anthropic
