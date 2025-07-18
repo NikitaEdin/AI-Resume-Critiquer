@@ -71,11 +71,14 @@ def extract_text_from_file(uploaded_file):
         st.error("Unsupported file type. Please upload a PDF or TXT file.")
         return None
 
+# Cache analysis function to avoid repeated calls
+@st.cache_data(show_spinner=False)
+def get_analysis(model, prompt):
+    return call_llm(model, prompt)
 
 
 # Analyse uploaded file
 if analyse and uploaded_file is not None:
-    st.write("Analysing your resume...")
     try:
         file_content = extract_text_from_file(uploaded_file)
         
@@ -104,8 +107,10 @@ if analyse and uploaded_file is not None:
         Use bullet points or headers to structure feedback clearly. 
         """
 
-        # Call the selected LLM
-        analysis = call_llm(selected_model, prompt)
+        # Show spinner while calling LLM
+        with st.spinner("Getting AI feedback..."):
+            # Call the selected LLM
+            analysis = get_analysis(selected_model, prompt)
 
         st.markdown("### Analysis Results:")
         st.markdown(analysis, unsafe_allow_html=False)
