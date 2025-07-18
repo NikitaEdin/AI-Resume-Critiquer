@@ -5,10 +5,11 @@ Utilising Streamlits for its rapid development and intuitive UI.
 ![](/example.gif)
 
 ## Features
-- Instant resume analysis and detailed feedback.
-- Suggestions on structure, clarity, and impact.
-- Supports both Claude and OpenAI models (planned).
+- Instant resume analysis and detailed feedback, including suggestions.
 - Interactive Streamlit app for seamless user experience.
+- Supports both Claude and OpenAI models.
+- Query cache to prevent idential API requests.
+- Supports PDF, TXT, and DOCX.
 
 ## Requirements
 - Python 3.9+
