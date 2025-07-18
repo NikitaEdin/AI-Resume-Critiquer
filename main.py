@@ -1,6 +1,5 @@
 import streamlit as st
-import PyPDF2
-import io
+from text_extractor import extract_text_from_file
 from llm_handler import get_available_models, get_selected_model, call_llm
 from dotenv import load_dotenv
 
@@ -41,35 +40,10 @@ st.info(f"Using AI model: **{selected_model}**")
 
 # File uploader for PDF/TXT files
 st.markdown("### Upload Your Resume")
-uploaded_file = st.file_uploader("Choose a PDF/TXT file", type=["pdf", "txt"])
+uploaded_file = st.file_uploader("Choose a PDF/TXT/DOCX file", type=["pdf", "txt", "docx"])
 job_role = st.text_input("Enter the job role you are applying for (optional): ")
 
 analyse = st.button("Analyse Resume")
-
-# Extract text from PDF files
-def extract_text_from_pdf(pdf_file):
-    pdf_reader = PyPDF2.PdfReader(pdf_file)
-    text = ""
-    for page in pdf_reader.pages:
-        text += page.extract_text() + "\n"
-    return text
-
-# Extract text based on type
-def extract_text_from_file(uploaded_file):
-    if uploaded_file is None:
-        st.error("Please upload a file to analyse.")
-        return None
-    
-    # PDF
-    if uploaded_file.type == "application/pdf":
-        return extract_text_from_pdf(io.BytesIO(uploaded_file.read()))
-    # TXT
-    elif uploaded_file.type == "text/plain":
-        return uploaded_file.read().decode("utf-8")
-    # Unsupported type
-    else:
-        st.error("Unsupported file type. Please upload a PDF or TXT file.")
-        return None
 
 # Cache analysis function to avoid repeated calls
 @st.cache_data(show_spinner=False)
@@ -114,5 +88,13 @@ if analyse and uploaded_file is not None:
 
         st.markdown("### Analysis Results:")
         st.markdown(analysis, unsafe_allow_html=False)
+
+         # Add download button for analysis text
+        st.download_button(
+            label="Download Analysis as TXT",
+            data=analysis,
+            file_name="resume_analysis.txt",
+            mime="text/plain",
+        )
     except Exception as e:
         st.error(f"An error occurred while processing the file: {e}")
