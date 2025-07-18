@@ -1,8 +1,7 @@
 import streamlit as st
 import PyPDF2
 import io
-import os
-from anthropic import Anthropic
+from llm_handler import get_available_models, get_selected_model, call_llm
 from dotenv import load_dotenv
 
 # Load environment variables from .env file
@@ -13,18 +12,41 @@ st.set_page_config(page_title="AI Resume Critiquer", layout="centered")
 st.title("AI Resume Critiquer")
 st.markdown("Upload your resume in PDF format and get feedback from our AI critiquer.")
 
-# Get OpenAI API key from env
-OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
-if not OPENAI_API_KEY:
-    st.error("OpenAI API key is not set. Please set it in the .env file.")
+# Get available models
+available_models = get_available_models()
+
+# No available models found
+if not available_models:
+    st.error("No valid API keys found. Please set them in the .env file.")
+    st.stop()
+
+use_custom_selection = False
+user_selection = None
+
+
+
+
+
+# Model selection
+st.markdown("### Select AI Model")
+if len(available_models) > 1:
+    use_custom_selection = st.checkbox("Choose AI model manually")
+    if use_custom_selection:
+        user_selection = st.selectbox("Select the AI model to use:", available_models)
+
+selected_model = get_selected_model(available_models, use_custom_selection, user_selection)
+st.info(f"Using AI model: **{selected_model}**")
+
+
 
 # File uploader for PDF/TXT files
+st.markdown("### Upload Your Resume")
 uploaded_file = st.file_uploader("Choose a PDF/TXT file", type=["pdf", "txt"])
 job_role = st.text_input("Enter the job role you are applying for (optional): ")
 
 analyse = st.button("Analyse Resume")
 
-
+# Extract text from PDF files
 def extract_text_from_pdf(pdf_file):
     pdf_reader = PyPDF2.PdfReader(pdf_file)
     text = ""
@@ -32,6 +54,7 @@ def extract_text_from_pdf(pdf_file):
         text += page.extract_text() + "\n"
     return text
 
+# Extract text based on type
 def extract_text_from_file(uploaded_file):
     if uploaded_file is None:
         st.error("Please upload a file to analyse.")
@@ -47,6 +70,8 @@ def extract_text_from_file(uploaded_file):
     else:
         st.error("Unsupported file type. Please upload a PDF or TXT file.")
         return None
+
+
 
 # Analyse uploaded file
 if analyse and uploaded_file is not None:
@@ -79,28 +104,10 @@ if analyse and uploaded_file is not None:
         Use bullet points or headers to structure feedback clearly. 
         """
 
-        # Define ANTHROPIC client
-        ANTHROPIC_API_KEY = os.getenv("ANTHROPIC_API_KEY")
-        client = Anthropic(api_key=ANTHROPIC_API_KEY)
-        response = client.messages.create(
-            model="claude-opus-4-20250514",  
-            max_tokens=500,
-            temperature=0.3,
-            system="You are an expert resume critiquer and reviewer with years of experience in the field.",
-            messages=[
-                {"role": "user", "content": prompt}
-            ]
-        )
-        
-        st.markdown("### Analysis Results:")
+        # Call the selected LLM
+        analysis = call_llm(selected_model, prompt)
 
-        # Anthropic
-        analysis = "".join(
-            block.text if hasattr(block, "text") else str(block)
-            for block in response.content
-        )
+        st.markdown("### Analysis Results:")
         st.markdown(analysis, unsafe_allow_html=False)
     except Exception as e:
         st.error(f"An error occurred while processing the file: {e}")
-
-        
